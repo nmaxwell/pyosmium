@@ -55,27 +55,30 @@ elif osplatform in ["linux", "linux2"]:
 else:
     libdirs.append(os.path.join(boost_prefix, 'lib'))
 
-# try to find the boost library matching the python version
-suffixes = [ # Debian naming convention for version installed in parallel
-             "-py%d%d" % (pyversion.major, pyversion.minor),
-             # Gentoo naming convention for version installed in parallel
-             "-%d.%d" % (pyversion.major, pyversion.minor),
-             # standard suffix for Python3
-             "%d" % (pyversion.major),
-             # standard naming
-             "",
-             # former naming schema?
-             "-mt"
-           ]
-for suf in suffixes:
-    lib = find_library("boost_python%s" % suf)
-    if lib is not None:
-        libs.append("boost_python%s" % suf)
-        break
+if 'BOOST_PYTHON_LIB' in os.environ:
+    libs.append(os.environ['BOOST_PYTHON_LIB'])
 else:
-    # Visual C++ supports auto-linking, no library needed
-    if osplatform != "win32":
-        raise Exception("Cannot find boost_python library")
+    # try to find the boost library matching the python version
+    suffixes = [ # Debian naming convention for version installed in parallel
+                 "-py%d%d" % (pyversion.major, pyversion.minor),
+                 # Gentoo naming convention for version installed in parallel
+                 "-%d.%d" % (pyversion.major, pyversion.minor),
+                 # standard suffix for Python3
+                 "%d" % (pyversion.major),
+                 # standard naming
+                 "",
+                 # former naming schema?
+                 "-mt"
+               ]
+    for suf in suffixes:
+        lib = find_library("boost_python%s" % suf)
+        if lib is not None:
+            libs.append("boost_python%s" % suf)
+            break
+    else:
+        # Visual C++ supports auto-linking, no library needed
+        if osplatform != "win32":
+            raise Exception("Cannot find boost_python library")
 
 if osplatform != "win32":
     orig_compiler = setuptools_build_ext.customize_compiler
